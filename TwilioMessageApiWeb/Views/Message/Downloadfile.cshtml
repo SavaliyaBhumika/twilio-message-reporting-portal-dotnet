@@ -1,0 +1,141 @@
+﻿
+@{
+    ViewBag.Title = "Downloadfile";
+    Layout = null;
+}
+<style>
+    .loader {
+        top: 50%;
+        left: 50%;
+        position: fixed;
+        opacity: 0.8;
+        z-index: 10000000;
+        background: Black;
+        margin: auto;
+    }  
+</style>
+<div id="LoaderDiv"></div>
+<h2>Twilio 7 Day Messages Log</h2>
+<a onclick="DownloadFile('7daysmessagefile')">Click here to download the last 7 days of messages</a>
+<br />
+
+<h2>Twilio 24hr Messages Log</h2>
+<a onclick="DownloadFile('24hrmessagefile')">Click here to download the last 24hrs of messages</a>
+
+<h2>Twilio Date wise Messages Log</h2>
+Select Date: <input type="date" id="txtcustomdate" name="txtcustomdate" value="" placeholder="Enter">
+<input type="button" value="Get File" onclick="GetDateWiseFile()" />
+
+<link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<script src="~/Scripts/bootstrap.min.js"></script>
+
+<!-- set up the modal to start hidden and fade in and out -->
+<div id="myModal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><b>Login </b></div>
+
+            <!-- dialog body -->
+            <div class="modal-body">
+
+                User Name : <input type="text" id="username" value="" /><br />
+                <br />
+                Password : <input type="password" id="password" value="" />
+            </div>
+            <!-- dialog buttons -->
+            <div class="modal-footer"><button type="button" class="btn btn-primary" onclick="submitform()">OK</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- sometime later, probably inside your on load event callback -->
+<script>
+    $(document).ready(function () {
+        openloginmodel();
+        $("#LoaderDiv").html('<img src="/Content/Loader.gif" class="loader"/>');
+    })
+    var $loading = $('#LoaderDiv').hide();
+    $(document)
+        .ajaxStart(function () {
+            $loading.show();
+        })
+        .ajaxStop(function () {
+            $loading.hide();
+        });
+    function openloginmodel() {
+        $("#myModal").modal('show')
+    }
+    $("#myModal").on("show", function () {    // wire up the OK button to dismiss the modal when shown
+        $("#myModal a.btn").on("click", function (e) {
+            console.log("button pressed");   // just as an example...
+            $("#myModal").modal('hide');     // dismiss the dialog
+        });
+    });
+
+    $("#myModal").on("hide", function () {    // remove the event listeners when the dialog is dismissed
+        $("#myModal a.btn").off("click");
+    });
+
+    $("#myModal").on("hidden", function () {  // remove the actual elements from the DOM when fully hidden
+        $("#myModal").remove();
+    });
+    var successlogin = false;
+    function submitform() {
+        var Username = $("#username").val();
+        var Password = $("#password").val();
+        $.ajax({
+            url: '/Message/Login?U=' + Username + '&P=' + Password,
+            type: "POST",
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.Success) {
+                    $("#myModal").modal('hide');
+                    successlogin = true;
+                    //window.location.href = response.Data;
+                }
+                else {
+                    $("#myModal").modal('hide');
+                    alert("Username password is incorrect");
+                    successlogin = false;
+                }
+            }
+        })
+    }
+    function DownloadFile(obj) {
+        if (successlogin) {
+            $.ajax({
+                url: '/Message/GetFilesForDownload?FN=' + obj,
+                type: "POST",
+                contentType: 'application/json',
+                success: function (response) {
+                    if (response.Data != null) {
+                        window.location.href = response.Data;
+                    }
+                }
+            });
+        }
+        else {
+            openloginmodel();
+        }
+    }
+    function GetDateWiseFile() {
+        if (successlogin) {
+            let selecteddate = $("#txtcustomdate").val();
+            $.ajax({
+                url: '/Message/GetDateWiseFile?date=' + selecteddate,
+                type: "POST",
+                contentType: 'application/json',
+                success: function (response) {
+                    if (response.Data != null) {
+                        window.location.href = response.Data;
+                    }
+                }
+            });
+        }
+        else {
+            openloginmodel();
+        }
+    }
+</script>

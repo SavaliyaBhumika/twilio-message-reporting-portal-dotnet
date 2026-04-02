@@ -1,0 +1,10 @@
+.vs/
+bin/
+obj/
+packages/
+*.user
+*.suo
+*.log
+App_Data/
+Properties/PublishProfiles/
+TwilioMessageApiWeb.csproj.user

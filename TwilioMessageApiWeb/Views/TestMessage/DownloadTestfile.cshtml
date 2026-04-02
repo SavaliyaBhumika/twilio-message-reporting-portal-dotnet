@@ -1,0 +1,95 @@
+﻿
+@{
+    ViewBag.Title = "Downloadfile";
+    Layout = null;
+}
+
+<h2>Twilio Test Messages Log</h2>
+<a onclick="DownloadFile('24hrmessagefile')">Click here to download the test messages</a>
+
+<link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<script src="~/Scripts/bootstrap.min.js"></script>
+
+<!-- set up the modal to start hidden and fade in and out -->
+<div id="myModal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><b>Login </b></div>
+
+            <!-- dialog body -->
+            <div class="modal-body">
+
+                User Name : <input type="text" id="username" value="" /><br />
+                <br />
+                Password : <input type="password" id="password" value="" />
+            </div>
+            <!-- dialog buttons -->
+            <div class="modal-footer"><button type="button" class="btn btn-primary" onclick="submitform()">OK</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- sometime later, probably inside your on load event callback -->
+<script>
+    $(document).ready(function () {
+        openloginmodel();
+    })
+    function openloginmodel() {
+        $("#myModal").modal('show')
+    }
+    $("#myModal").on("show", function () {    // wire up the OK button to dismiss the modal when shown
+        $("#myModal a.btn").on("click", function (e) {
+            console.log("button pressed");   // just as an example...
+            $("#myModal").modal('hide');     // dismiss the dialog
+        });
+    });
+
+    $("#myModal").on("hide", function () {    // remove the event listeners when the dialog is dismissed
+        $("#myModal a.btn").off("click");
+    });
+
+    $("#myModal").on("hidden", function () {  // remove the actual elements from the DOM when fully hidden
+        $("#myModal").remove();
+    });
+    var successlogin = false;
+    function submitform() {
+        var Username = $("#username").val();
+        var Password = $("#password").val();
+        $.ajax({
+            url: '/TestMessage/Login?U=' + Username + '&P=' + Password,
+            type: "POST",
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.Success) {
+                    $("#myModal").modal('hide');
+                    successlogin = true;
+                    //window.location.href = response.Data;
+                }
+                else {
+                    $("#myModal").modal('hide');
+                    alert("Username password is incorrect");
+                    successlogin = false;
+                }
+            }
+        })
+    }
+    function DownloadFile(obj) {
+        if (successlogin) {
+            $.ajax({
+                url: '/TestMessage/GetFilesForDownload?FN=' + obj,
+                type: "POST",
+                contentType: 'application/json',
+                success: function (response) {
+                    if (response.Data != null) {
+                        window.location.href = response.Data;
+                    }
+                }
+            });
+        }
+        else {
+            openloginmodel();
+        }
+    }
+</script>
